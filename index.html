@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Translate — Language Translation Tool</title>
+  <meta name="description" content="Fast, accurate language translation. Supports 25+ languages, free, no sign-up." />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #ffffff; --bg-secondary: #f5f5f3; --bg-tertiary: #efede8;
+      --text-primary: #1a1a18; --text-secondary: #5f5e5a; --text-tertiary: #888780;
+      --border: rgba(0,0,0,0.13); --border-md: rgba(0,0,0,0.22);
+      --radius-md: 8px; --radius-lg: 12px;
+      --accent: #185fa5; --accent-bg: #e6f1fb; --accent-text: #0c447c;
+      --success: #3b6d11; --danger: #a32d2d;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1a; --bg-secondary: #252523; --bg-tertiary: #2e2e2b;
+        --text-primary: #f0ede6; --text-secondary: #b4b2a9; --text-tertiary: #888780;
+        --border: rgba(255,255,255,0.12); --border-md: rgba(255,255,255,0.22);
+        --accent: #85b7eb; --accent-bg: #042c53; --accent-text: #b5d4f4;
+        --success: #97c459; --danger: #f09595;
+      }
+    }
+    html, body { min-height: 100vh; font-family: var(--font); background: var(--bg-tertiary); color: var(--text-primary); line-height: 1.6; }
+    header { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 500; color: var(--text-primary); text-decoration: none; }
+    .logo i { font-size: 20px; color: var(--accent); }
+    .badge { font-size: 12px; background: var(--accent-bg); color: var(--accent-text); padding: 3px 10px; border-radius: 20px; }
+    .hero { text-align: center; padding: 3rem 1rem 2rem; }
+    .hero h1 { font-size: clamp(28px, 5vw, 42px); font-weight: 500; letter-spacing: -0.02em; margin-bottom: 10px; }
+    .hero p { font-size: 16px; color: var(--text-secondary); max-width: 400px; margin: 0 auto; }
+    .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); max-width: 820px; margin: 0 auto 2rem; padding: 1.5rem; }
+    .lang-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .lang-bar select { flex: 1; font-size: 14px; padding: 9px 30px 9px 12px; border-radius: var(--radius-md); border: 0.5px solid var(--border-md); background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; font-family: var(--font); appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+    .lang-bar select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .swap-btn { width: 38px; height: 38px; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s; font-size: 16px; }
+    .swap-btn:hover { background: var(--bg-tertiary); }
+    .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 560px) { .panels { grid-template-columns: 1fr; } }
+    .panel { border: 0.5px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--bg); }
+    .panel-label { font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-tertiary); padding: 10px 14px 0; display: flex; align-items: center; gap: 6px; }
+    .panel textarea { width: 100%; border: none; outline: none; background: transparent; color: var(--text-primary); font-size: 15px; line-height: 1.65; padding: 8px 14px 12px; resize: none; height: 200px; font-family: var(--font); }
+    .panel-footer { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-top: 0.5px solid var(--border); background: var(--bg-secondary); min-height: 44px; }
+    .char-count { font-size: 12px; color: var(--text-tertiary); }
+    .btn-sm { font-size: 13px; background: none; border: 0.5px solid var(--border-md); color: var(--text-secondary); cursor: pointer; padding: 5px 10px; border-radius: var(--radius-md); display: inline-flex; align-items: center; gap: 5px; font-family: var(--font); transition: background 0.15s; }
+    .btn-sm:hover { background: var(--bg); }
+    .output-text { padding: 8px 14px 12px; font-size: 15px; line-height: 1.65; color: var(--text-primary); min-height: 200px; white-space: pre-wrap; word-break: break-word; }
+    .placeholder { color: var(--text-tertiary); font-style: italic; }
+    .translate-btn { width: 100%; margin-top: 14px; padding: 12px; font-size: 15px; font-weight: 500; background: var(--accent); border: none; border-radius: var(--radius-md); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font); transition: opacity 0.15s; }
+    .translate-btn:hover:not(:disabled) { opacity: 0.88; }
+    .translate-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .status-bar { margin-top: 10px; font-size: 13px; min-height: 20px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+    .spinner { width: 14px; height: 14px; border: 2px solid var(--border-md); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .tag { font-size: 11px; background: var(--accent-bg); color: var(--accent-text); padding: 2px 8px; border-radius: 20px; }
+    .error { color: var(--danger); }
+    .success { color: var(--success); }
+    .main { padding: 0 1rem; }
+    footer { text-align: center; padding: 2rem 1rem; font-size: 13px; color: var(--text-tertiary); border-top: 0.5px solid var(--border); margin-top: 2rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="#">
+    <i class="ti ti-language"></i>
+    Translate
+  </a>
+  <span class="badge">Free · No sign-up</span>
+</header>
+
+<div class="hero">
+  <h1>Translate anything.</h1>
+  <p>Paste text, pick a language, get an instant translation. Free, no account needed.</p>
+</div>
+
+<main class="main">
+  <div class="card">
+    <div class="lang-bar">
+      <select id="srcLang" aria-label="Source language">
+        <option value="auto">Detect language</option>
+        <option value="en">English</option>
+        <option value="es">Spanish</option>
+        <option value="fr">French</option>
+        <option value="de">German</option>
+        <option value="it">Italian</option>
+        <option value="pt">Portuguese</option>
+        <option value="ru">Russian</option>
+        <option value="ja">Japanese</option>
+        <option value="ko">Korean</option>
+        <option value="zh">Chinese (Simplified)</option>
+        <option value="zh-TW">Chinese (Traditional)</option>
+        <option value="ar">Arabic</option>
+        <option value="hi">Hindi</option>
+        <option value="bn">Bengali</option>
+        <option value="tr">Turkish</option>
+        <option value="nl">Dutch</option>
+        <option value="sv">Swedish</option>
+        <option value="pl">Polish</option>
+        <option value="vi">Vietnamese</option>
+        <option value="th">Thai</option>
+        <option value="el">Greek</option>
+        <option value="he">Hebrew</option>
+        <option value="id">Indonesian</option>
+        <option value="ur">Urdu</option>
+      </select>
+      <button class="swap-btn" id="swapBtn" aria-label="Swap languages">
+        <i class="ti ti-arrows-right-left"></i>
+      </button>
+      <select id="tgtLang" aria-label="Target language">
+        <option value="es">Spanish</option>
+        <option value="en">English</option>
+        <option value="fr">French</option>
+        <option value="de">German</option>
+        <option value="it">Italian</option>
+        <option value="pt">Portuguese</option>
+        <option value="ru">Russian</option>
+        <option value="ja">Japanese</option>
+        <option value="ko">Korean</option>
+        <option value="zh">Chinese (Simplified)</option>
+        <option value="zh-TW">Chinese (Traditional)</option>
+        <option value="ar">Arabic</option>
+        <option value="hi">Hindi</option>
+        <option value="bn">Bengali</option>
+        <option value="tr">Turkish</option>
+        <option value="nl">Dutch</option>
+        <option value="sv">Swedish</option>
+        <option value="pl">Polish</option>
+        <option value="vi">Vietnamese</option>
+        <option value="th">Thai</option>
+        <option value="el">Greek</option>
+        <option value="he">Hebrew</option>
+        <option value="id">Indonesian</option>
+        <option value="ur">Urdu</option>
+      </select>
+    </div>
+
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-label">Source text</div>
+        <textarea id="srcText" placeholder="Type or paste text here…" aria-label="Text to translate"></textarea>
+        <div class="panel-footer">
+          <span class="char-count" id="charCount">0 / 500</span>
+          <button class="btn-sm" id="clearBtn">
+            <i class="ti ti-x" style="font-size:13px;"></i> Clear
+          </button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-label">
+          Translation
+          <span class="tag" id="detectedTag" style="display:none;"></span>
+        </div>
+        <div class="output-text" id="outputText" aria-live="polite">
+          <span class="placeholder">Translation appears here…</span>
+        </div>
+        <div class="panel-footer">
+          <div style="display:flex;gap:6px;">
+            <button class="btn-sm" id="copyBtn">
+              <i class="ti ti-copy" style="font-size:14px;"></i> Copy
+            </button>
+            <button class="btn-sm" id="ttsBtn">
+              <i class="ti ti-volume" style="font-size:14px;"></i> Speak
+            </button>
+          </div>
+          <span class="char-count" id="outCount"></span>
+        </div>
+      </div>
+    </div>
+
+    <button class="translate-btn" id="translateBtn">
+      <i class="ti ti-language" style="font-size:18px;"></i>
+      Translate
+    </button>
+
+    <div class="status-bar" id="statusBar"></div>
+  </div>
+</main>
+
+<footer>
+  Powered by MyMemory · Free translation · 1000 words/day
+</footer>
+
+<script>
+  const srcText     = document.getElementById('srcText');
+  const outputText  = document.getElementById('outputText');
+  const charCount   = document.getElementById('charCount');
+  const outCount    = document.getElementById('outCount');
+  const srcLang     = document.getElementById('srcLang');
+  const tgtLang     = document.getElementById('tgtLang');
+  const translateBtn= document.getElementById('translateBtn');
+  const clearBtn    = document.getElementById('clearBtn');
+  const copyBtn     = document.getElementById('copyBtn');
+  const ttsBtn      = document.getElementById('ttsBtn');
+  const statusBar   = document.getElementById('statusBar');
+  const detectedTag = document.getElementById('detectedTag');
+
+  let translatedText = '';
+  let isTranslating  = false;
+
+  srcText.addEventListener('input', () => {
+    const len = srcText.value.length;
+    if (len > 500) srcText.value = srcText.value.slice(0, 500);
+    charCount.textContent = `${Math.min(len, 500)} / 500`;
+  });
+
+  clearBtn.addEventListener('click', () => {
+    srcText.value = '';
+    charCount.textContent = '0 / 500';
+    outputText.innerHTML = '<span class="placeholder">Translation appears here…</span>';
+    translatedText = '';
+    outCount.textContent = '';
+    detectedTag.style.display = 'none';
+    statusBar.innerHTML = '';
+  });
+
+  document.getElementById('swapBtn').addEventListener('click', () => {
+    const a = srcLang.value, b = tgtLang.value;
+    if (a === 'auto') return;
+    srcLang.value = b;
+    tgtLang.value = a;
+    if (translatedText) {
+      srcText.value = translatedText;
+      charCount.textContent = `${translatedText.length} / 500`;
+      outputText.innerHTML = '<span class="placeholder">Translation appears here…</span>';
+      translatedText = '';
+      outCount.textContent = '';
+    }
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    if (!translatedText) return;
+    try {
+      await navigator.clipboard.writeText(translatedText);
+      copyBtn.innerHTML = '<i class="ti ti-check" style="font-size:14px;"></i> Copied!';
+      setTimeout(() => { copyBtn.innerHTML = '<i class="ti ti-copy" style="font-size:14px;"></i> Copy'; }, 2000);
+    } catch { copyBtn.textContent = 'Failed'; }
+  });
+
+  ttsBtn.addEventListener('click', () => {
+    if (!translatedText || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(translatedText);
+    utter.lang = tgtLang.value;
+    window.speechSynthesis.speak(utter);
+    ttsBtn.innerHTML = '<i class="ti ti-volume" style="font-size:14px;"></i> Speaking…';
+    utter.onend = () => { ttsBtn.innerHTML = '<i class="ti ti-volume" style="font-size:14px;"></i> Speak'; };
+  });
+
+  srcText.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') translateBtn.click();
+  });
+
+  translateBtn.addEventListener('click', async () => {
+    const text = srcText.value.trim();
+    if (!text || isTranslating) return;
+
+    const src = srcLang.value;
+    const tgt = tgtLang.value;
+    if (src !== 'auto' && src === tgt) {
+      statusBar.innerHTML = '<span class="error">Source and target languages are the same.</span>';
+      return;
+    }
+
+    isTranslating = true;
+    translateBtn.disabled = true;
+    translateBtn.innerHTML = '<div class="spinner"></div> Translating…';
+    statusBar.innerHTML = '<div class="spinner"></div> <span>Translating…</span>';
+    detectedTag.style.display = 'none';
+    outputText.innerHTML = '<span class="placeholder">Translating…</span>';
+
+    const langPair = src === 'auto' ? `autodetect|${tgt}` : `${src}|${tgt}`;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      const data = await res.json();
+
+      if (data.responseStatus !== 200) {
+        throw new Error(data.responseMessage || 'Translation failed');
+      }
+
+      translatedText = data.responseData.translatedText;
+      outputText.textContent = translatedText;
+      outCount.textContent = `${translatedText.length} chars`;
+
+      if (src === 'auto' && data.responseData.detectedLanguage) {
+        detectedTag.textContent = `Detected: ${data.responseData.detectedLanguage}`;
+        detectedTag.style.display = 'inline';
+      }
+
+      statusBar.innerHTML = '<i class="ti ti-check" style="font-size:14px;color:var(--success);"></i> <span class="success">Done</span>';
+    } catch (err) {
+      statusBar.innerHTML = `<span class="error"><i class="ti ti-alert-circle" style="font-size:14px;vertical-align:-2px;"></i> ${err.message}</span>`;
+      outputText.innerHTML = '<span class="placeholder">Translation appears here…</span>';
+      translatedText = '';
+    } finally {
+      isTranslating = false;
+      translateBtn.disabled = false;
+      translateBtn.innerHTML = '<i class="ti ti-language" style="font-size:18px;"></i> Translate';
+    }
+  });
+</script>
+</body>
+</html>
